@@ -12,7 +12,7 @@
 <dependency>
     <groupId>com.arsframework</groupId>
     <artifactId>apidoc-core</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
 </dependency>
 ```
 
@@ -22,4 +22,7 @@
 ## 4 版本更新日志
 ### v1.3.0
 1. 将接口信息处理核心部分拆分成单独的JAR包；
+
+### v1.3.1
+1. 增加对@PathVariable注解的解析；
 

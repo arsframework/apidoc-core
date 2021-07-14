@@ -47,6 +47,7 @@ import com.sun.javadoc.FieldDoc;
 import com.sun.javadoc.MethodDoc;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.bind.annotation.ValueConstants;
@@ -294,7 +295,8 @@ public class ParameterAnalyser {
     protected boolean isRequired(AnnotatedElement element) {
         return element != null && (element.isAnnotationPresent(NotNull.class)
                 || element.isAnnotationPresent(NotBlank.class) || element.isAnnotationPresent(NotEmpty.class)
-                || (element.isAnnotationPresent(Size.class) && element.getAnnotation(Size.class).min() > 0));
+                || (element.isAnnotationPresent(Size.class) && element.getAnnotation(Size.class).min() > 0)
+                || (element.isAnnotationPresent(PathVariable.class) && element.getAnnotation(PathVariable.class).required()));
     }
 
     /**
