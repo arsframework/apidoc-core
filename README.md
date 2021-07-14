@@ -12,7 +12,7 @@
 <dependency>
     <groupId>com.arsframework</groupId>
     <artifactId>apidoc-core</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
 </dependency>
 ```
 
@@ -25,4 +25,7 @@
 
 ### v1.3.1
 1. 增加对@PathVariable注解的解析；
+
+### v1.3.2
+1. 更新请求头的默认值设置；
 

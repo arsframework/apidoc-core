@@ -291,7 +291,7 @@ public final class DocumentHelper {
         for (Annotation[] annotations : method.getParameterAnnotations()) {
             for (Annotation annotation : annotations) {
                 if (annotation instanceof RequestBody) {
-                    return "{String} Content-Type application/json";
+                    return "{String} Content-Type = application/json";
                 }
             }
         }
@@ -301,14 +301,14 @@ public final class DocumentHelper {
             if (!ClassHelper.isMetaClass(type)) {
                 for (Field field : type.getDeclaredFields()) {
                     if (!field.isSynthetic() && MultipartFile.class.isAssignableFrom(field.getType())) {
-                        return "{String} Content-Type multipart/form-data";
+                        return "{String} Content-Type = multipart/form-data";
                     }
                 }
             }
         }
 
         // Form
-        return "{String} Content-Type application/x-www-form-urlencoded";
+        return "{String} Content-Type = application/x-www-form-urlencoded";
     }
 
     /**
