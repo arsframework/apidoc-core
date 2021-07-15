@@ -139,7 +139,7 @@ public final class ContextHelper {
      * @return true/false
      */
     public static boolean isActivePackage(Package pkg) {
-        return pkg == null ? true : getIncludeGroupIdentities().stream().anyMatch(pkg.getName()::startsWith);
+        return pkg == null || getIncludeGroupIdentities().stream().anyMatch(pkg.getName()::startsWith);
     }
 
     /**

@@ -12,7 +12,7 @@
 <dependency>
     <groupId>com.arsframework</groupId>
     <artifactId>apidoc-core</artifactId>
-    <version>1.3.3</version>
+    <version>1.3.4</version>
 </dependency>
 ```
 
@@ -31,4 +31,7 @@
 
 ### v1.3.3
 1. 修复获取默认参数值时出现异常问题；
+
+### v1.3.4
+1. 修复通过lombok获取对象实例异常问题；
 

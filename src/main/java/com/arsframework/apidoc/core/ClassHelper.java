@@ -195,29 +195,31 @@ public final class ClassHelper {
      * Get class instance
      *
      * @param clazz Target class
-     * @param <T>   Class type
      * @return Class instance
      */
-    public static <T> T getInstance(Class<T> clazz) {
+    public static Object getInstance(Class<?> clazz) {
         if (clazz == null || Modifier.isAbstract(clazz.getModifiers()) || Modifier.isInterface(clazz.getModifiers())) {
             return null;
         }
 
         try {
+            // Build instance by constructor
+            for (Constructor<?> constructor : clazz.getConstructors()) {
+                if (constructor.getParameterCount() == 0) {
+                    constructor.setAccessible(true);
+                    return constructor.newInstance();
+                }
+            }
+
             // Build instance by lombok
             Method method = lookupMethod(clazz, "builder");
             if (method != null) {
                 Object builder = method.invoke(clazz);
                 if (builder != null && (method = lookupMethod(builder.getClass(), "build")) != null) {
-                    return (T) method.invoke(builder);
-                }
-            }
-
-            // Build instance by constructor
-            for (Constructor<?> constructor : clazz.getConstructors()) {
-                if (constructor.getParameterCount() == 0) {
-                    constructor.setAccessible(true);
-                    return (T) constructor.newInstance();
+                    Object instance = method.invoke(builder);
+                    if (instance != null && clazz.isAssignableFrom(instance.getClass())) {
+                        return instance;
+                    }
                 }
             }
         } catch (ReflectiveOperationException e) {
