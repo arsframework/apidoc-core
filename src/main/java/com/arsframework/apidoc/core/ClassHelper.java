@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -187,5 +189,40 @@ public final class ClassHelper {
             mappings.put(variables[i], types[i]);
         }
         return mappings;
+    }
+
+    /**
+     * Get class instance
+     *
+     * @param clazz Target class
+     * @param <T>   Class type
+     * @return Class instance
+     */
+    public static <T> T getInstance(Class<T> clazz) {
+        if (clazz == null || Modifier.isAbstract(clazz.getModifiers()) || Modifier.isInterface(clazz.getModifiers())) {
+            return null;
+        }
+
+        try {
+            // Build instance by lombok
+            Method method = lookupMethod(clazz, "builder");
+            if (method != null) {
+                Object builder = method.invoke(clazz);
+                if (builder != null && (method = lookupMethod(builder.getClass(), "build")) != null) {
+                    return (T) method.invoke(builder);
+                }
+            }
+
+            // Build instance by constructor
+            for (Constructor<?> constructor : clazz.getConstructors()) {
+                if (constructor.getParameterCount() == 0) {
+                    constructor.setAccessible(true);
+                    return (T) constructor.newInstance();
+                }
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 }

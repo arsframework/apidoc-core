@@ -7,7 +7,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -323,45 +322,24 @@ public class ParameterAnalyser {
     /**
      * Get parameter default value
      *
-     * @param field Field object
+     * @param instance Class instance
+     * @param field    Field object
      * @return Parameter default value
      */
-    protected Object getDefaultValue(Field field) {
+    protected Object getDefaultValue(Object instance, Field field) {
         Objects.requireNonNull(field, "field not specified");
-        try {
-            Object instance = null;
-            Class<?> clazz = field.getDeclaringClass();
-
-            // Build instance by lombok
-            Method method = ClassHelper.lookupMethod(clazz, "builder");
-            if (method != null) {
-                Object builder = method.invoke(clazz);
-                if (builder != null && (method = ClassHelper.lookupMethod(builder.getClass(), "build")) != null) {
-                    instance = method.invoke(builder);
-                }
-            }
-
-            // Build instance by constructor
-            if (instance == null || !clazz.isAssignableFrom(instance.getClass())) {
-                for (Constructor<?> constructor : clazz.getConstructors()) {
-                    if (constructor.getParameterCount() == 0) {
-                        constructor.setAccessible(true);
-                        instance = constructor.newInstance();
-                    }
-                }
-            }
-
-            // Get default value of field
-            if (instance != null && clazz.isAssignableFrom(instance.getClass())) {
+        if (instance != null) {
+            try {
+                // Get default value of field
                 field.setAccessible(true);
                 Object defaultValue = field.get(instance);
                 if (defaultValue != null
                         && (!(defaultValue instanceof CharSequence) || ((CharSequence) defaultValue).length() > 0)) {
                     return defaultValue;
                 }
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
             }
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e.getMessage(), e);
         }
         return null;
     }
@@ -476,12 +454,14 @@ public class ParameterAnalyser {
     /**
      * Convert field to parameter
      *
+     * @param instance  Class instance
      * @param field     Field object
      * @param variables Type variable and type mappings
      * @param stack     Class stack
      * @return Parameter object
      */
-    private Parameter field2parameter(Field field, Map<TypeVariable<?>, Type> variables, LinkedList<Class<?>> stack) {
+    private Parameter field2parameter(Object instance, Field field,
+                                      Map<TypeVariable<?>, Type> variables, LinkedList<Class<?>> stack) {
         Objects.requireNonNull(field, "field not specified");
         Type type = field.getGenericType();
         if (type instanceof TypeVariable && variables != null && variables.containsKey(type)) {
@@ -497,12 +477,13 @@ public class ParameterAnalyser {
         Parameter parameter = Parameter.builder().type(this.getType(target)).original(target).name(this.getName(field))
                 .size(this.getSize(field)).format(this.getFormat(field)).required(this.isRequired(field))
                 .multiple(multiple).example(this.getExample(field)).deprecated(this.isDeprecated(field))
-                .defaultValue(this.getDefaultValue(field)).description(this.getDescription(field))
+                .defaultValue(this.getDefaultValue(instance, field)).description(this.getDescription(field))
                 .options(this.getOptions(target)).build();
         if (!ClassHelper.isMetaClass(target) && !isRecursion(stack, target)) {
             stack.addLast(target);
             Map<TypeVariable<?>, Type> finalVariables = ClassHelper.getVariableParameterizedMappings(type);
-            parameter.setFields(this.class2parameters(target, f -> this.field2parameter(f, finalVariables, stack)));
+            parameter.setFields(this.class2parameters(target,
+                    f -> this.field2parameter(instance, f, finalVariables, stack)));
             stack.removeLast();
         }
         return parameter;
@@ -535,9 +516,11 @@ public class ParameterAnalyser {
                         .deprecated(this.isDeprecated(parameter)).defaultValue(this.getDefaultValue(parameter))
                         .description(this.getDescription(parameter)).options(this.getOptions(target)).build());
             } else {
+                Object instance = ClassHelper.getInstance(clazz);
                 LinkedList<Class<?>> stack = new LinkedList<>();
                 Map<TypeVariable<?>, Type> variables = ClassHelper.getVariableParameterizedMappings(type);
-                parameters.addAll(this.class2parameters(target, f -> this.field2parameter(f, variables, stack)));
+                parameters.addAll(this.class2parameters(target,
+                        f -> this.field2parameter(instance, f, variables, stack)));
             }
         }
         return parameters;
@@ -570,7 +553,7 @@ public class ParameterAnalyser {
             LinkedList<Class<?>> stack = new LinkedList<>();
             stack.addLast(target);
             Map<TypeVariable<?>, Type> variables = ClassHelper.getVariableParameterizedMappings(type);
-            parameter.setFields(this.class2parameters(target, f -> this.field2parameter(f, variables, stack)));
+            parameter.setFields(this.class2parameters(target, f -> this.field2parameter(null, f, variables, stack)));
         }
         return parameter;
     }

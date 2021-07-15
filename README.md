@@ -12,7 +12,7 @@
 <dependency>
     <groupId>com.arsframework</groupId>
     <artifactId>apidoc-core</artifactId>
-    <version>1.3.2</version>
+    <version>1.3.3</version>
 </dependency>
 ```
 
@@ -28,4 +28,7 @@
 
 ### v1.3.2
 1. 更新请求头的默认值设置；
+
+### v1.3.3
+1. 修复获取默认参数值时出现异常问题；
 
