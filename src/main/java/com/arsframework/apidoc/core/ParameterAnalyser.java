@@ -508,19 +508,28 @@ public class ParameterAnalyser {
             if (!this.isRequestParameter(parameter, target)) {
                 continue;
             }
+
+            boolean multiple = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
+            Parameter parent = Parameter.builder().type(this.getType(target)).original(target)
+                    .name(this.getName(parameter)).size(this.getSize(parameter)).format(this.getFormat(parameter))
+                    .required(this.isRequired(parameter)).multiple(multiple)
+                    .deprecated(this.isDeprecated(parameter)).defaultValue(this.getDefaultValue(parameter))
+                    .description(this.getDescription(parameter)).options(this.getOptions(target)).build();
             if (ClassHelper.isMetaClass(target)) {
-                boolean multiple = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
-                parameters.add(Parameter.builder().type(this.getType(target)).original(target)
-                        .name(this.getName(parameter)).size(this.getSize(parameter)).format(this.getFormat(parameter))
-                        .required(this.isRequired(parameter)).multiple(multiple)
-                        .deprecated(this.isDeprecated(parameter)).defaultValue(this.getDefaultValue(parameter))
-                        .description(this.getDescription(parameter)).options(this.getOptions(target)).build());
+                parameters.add(parent);
             } else {
                 Object instance = ClassHelper.getInstance(clazz);
                 LinkedList<Class<?>> stack = new LinkedList<>();
                 Map<TypeVariable<?>, Type> variables = ClassHelper.getVariableParameterizedMappings(type);
-                parameters.addAll(this.class2parameters(target,
-                        f -> this.field2parameter(instance, f, variables, stack)));
+                List<Parameter> fields =
+                        this.class2parameters(target, f -> this.field2parameter(instance, f, variables, stack));
+                if (multiple) {
+                    parent.setName("/");
+                    parent.setFields(fields);
+                    parameters.add(parent);
+                } else {
+                    parameters.addAll(fields);
+                }
             }
         }
         return parameters;
