@@ -481,9 +481,10 @@ public class ParameterAnalyser {
                 .options(this.getOptions(target)).build();
         if (!ClassHelper.isMetaClass(target) && !isRecursion(stack, target)) {
             stack.addLast(target);
+            Object targetInstance = multiple ? null : ClassHelper.getInstance(target);
             Map<TypeVariable<?>, Type> finalVariables = ClassHelper.getVariableParameterizedMappings(type);
             parameter.setFields(this.class2parameters(target,
-                    f -> this.field2parameter(instance, f, finalVariables, stack)));
+                    f -> this.field2parameter(targetInstance, f, finalVariables, stack)));
             stack.removeLast();
         }
         return parameter;
@@ -518,7 +519,7 @@ public class ParameterAnalyser {
             if (ClassHelper.isMetaClass(target)) {
                 parameters.add(parent);
             } else {
-                Object instance = ClassHelper.getInstance(clazz);
+                Object instance = multiple ? null : ClassHelper.getInstance(target);
                 LinkedList<Class<?>> stack = new LinkedList<>();
                 Map<TypeVariable<?>, Type> variables = ClassHelper.getVariableParameterizedMappings(type);
                 List<Parameter> fields =

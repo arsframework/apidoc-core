@@ -12,7 +12,7 @@
 <dependency>
     <groupId>com.arsframework</groupId>
     <artifactId>apidoc-core</artifactId>
-    <version>1.3.4</version>
+    <version>1.3.6</version>
 </dependency>
 ```
 
@@ -37,4 +37,7 @@
 
 ### v1.3.5
 1. 修复同时使用@PathVariable和@RequestBody注解参数的解析异常问题；
+
+### v1.3.6
+1. 修复获取默认值异常问题；
 
