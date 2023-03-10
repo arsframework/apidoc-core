@@ -18,6 +18,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Parameter {
     /**
+     * Is input parameter
+     */
+    private boolean input;
+
+    /**
      * Parameter type
      */
     private Class<?> type;

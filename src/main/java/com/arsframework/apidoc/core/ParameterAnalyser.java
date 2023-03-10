@@ -423,6 +423,14 @@ public class ParameterAnalyser {
     }
 
     /**
+     * Handle parameter after initialized
+     *
+     * @param parameter Parameter instance
+     */
+    protected void afterInitializeParameter(Parameter parameter) {
+    }
+
+    /**
      * Get parameters with class fields
      *
      * @param clazz    Class object
@@ -454,13 +462,14 @@ public class ParameterAnalyser {
     /**
      * Convert field to parameter
      *
+     * @param input     Is input parameter
      * @param instance  Class instance
      * @param field     Field object
      * @param variables Type variable and type mappings
      * @param stack     Class stack
      * @return Parameter object
      */
-    protected Parameter field2parameter(Object instance, Field field,
+    protected Parameter field2parameter(boolean input, Object instance, Field field,
                                         Map<TypeVariable<?>, Type> variables, LinkedList<Class<?>> stack) {
         Objects.requireNonNull(field, "field not specified");
         Type type = field.getGenericType();
@@ -474,19 +483,20 @@ public class ParameterAnalyser {
             target = ClassHelper.type2class(type = ClassHelper.getCollectionActualType(type, variables));
         }
         boolean multiple = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
-        Parameter parameter = Parameter.builder().type(this.getType(target)).original(target).name(this.getName(field))
-                .size(this.getSize(field)).format(this.getFormat(field)).required(this.isRequired(field))
-                .multiple(multiple).example(this.getExample(field)).deprecated(this.isDeprecated(field))
-                .defaultValue(this.getDefaultValue(instance, field)).description(this.getDescription(field))
-                .options(this.getOptions(target)).build();
+        Parameter parameter = Parameter.builder().input(input).type(this.getType(target)).original(target)
+                .name(this.getName(field)).size(this.getSize(field)).format(this.getFormat(field))
+                .required(this.isRequired(field)).multiple(multiple).example(this.getExample(field))
+                .deprecated(this.isDeprecated(field)).defaultValue(this.getDefaultValue(instance, field))
+                .description(this.getDescription(field)).options(this.getOptions(target)).build();
         if (!ClassHelper.isMetaClass(target) && !this.isRecursion(stack, target)) {
             stack.addLast(target);
             Object targetInstance = multiple ? null : ClassHelper.getInstance(target);
             Map<TypeVariable<?>, Type> finalVariables = ClassHelper.getVariableParameterizedMappings(type);
             parameter.setFields(this.class2parameters(target,
-                    f -> this.field2parameter(targetInstance, f, finalVariables, stack)));
+                    f -> this.field2parameter(input, targetInstance, f, finalVariables, stack)));
             stack.removeLast();
         }
+        this.afterInitializeParameter(parameter);
         return parameter;
     }
 
@@ -511,22 +521,25 @@ public class ParameterAnalyser {
             }
 
             boolean multiple = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
-            Parameter parent = Parameter.builder().type(this.getType(target)).original(target)
+            Parameter parent = Parameter.builder().input(true).type(this.getType(target)).original(target)
                     .name(this.getName(parameter)).size(this.getSize(parameter)).format(this.getFormat(parameter))
-                    .required(this.isRequired(parameter)).multiple(multiple)
-                    .deprecated(this.isDeprecated(parameter)).defaultValue(this.getDefaultValue(parameter))
-                    .description(this.getDescription(parameter)).options(this.getOptions(target)).build();
+                    .required(this.isRequired(parameter)).multiple(multiple).deprecated(this.isDeprecated(parameter))
+                    .defaultValue(this.getDefaultValue(parameter)).description(this.getDescription(parameter))
+                    .options(this.getOptions(target)).build();
             if (ClassHelper.isMetaClass(target)) {
+                this.afterInitializeParameter(parent);
                 parameters.add(parent);
             } else {
                 Object instance = multiple ? null : ClassHelper.getInstance(target);
                 LinkedList<Class<?>> stack = new LinkedList<>();
                 Map<TypeVariable<?>, Type> variables = ClassHelper.getVariableParameterizedMappings(type);
-                List<Parameter> fields =
-                        this.class2parameters(target, f -> this.field2parameter(instance, f, variables, stack));
+                List<Parameter> fields = this.class2parameters(
+                        target, f -> this.field2parameter(true, instance, f, variables, stack)
+                );
                 if (multiple) {
                     parent.setName("/");
                     parent.setFields(fields);
+                    this.afterInitializeParameter(parent);
                     parameters.add(parent);
                 } else {
                     parameters.addAll(fields);
@@ -557,14 +570,18 @@ public class ParameterAnalyser {
         String example = DocumentHelper.getExampleNote(document);
         String description = DocumentHelper.getReturnNote(document);
         boolean multiple = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
-        Parameter parameter = Parameter.builder().type(this.getType(target)).original(target).multiple(multiple)
-                .name("/").example(example).description(description).options(this.getOptions(target)).build();
+        Parameter parameter = Parameter.builder().input(false).type(this.getType(target)).original(target)
+                .multiple(multiple).name("/").example(example).description(description)
+                .options(this.getOptions(target)).build();
         if (!ClassHelper.isMetaClass(target)) {
             LinkedList<Class<?>> stack = new LinkedList<>();
             stack.addLast(target);
             Map<TypeVariable<?>, Type> variables = ClassHelper.getVariableParameterizedMappings(type);
-            parameter.setFields(this.class2parameters(target, f -> this.field2parameter(null, f, variables, stack)));
+            parameter.setFields(
+                    this.class2parameters(target, f -> this.field2parameter(false, null, f, variables, stack))
+            );
         }
+        this.afterInitializeParameter(parameter);
         return parameter;
     }
 }
