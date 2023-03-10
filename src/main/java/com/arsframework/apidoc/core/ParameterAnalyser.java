@@ -75,7 +75,7 @@ public class ParameterAnalyser {
      * @param clazz Target class object
      * @return true/false
      */
-    private static boolean isRecursion(LinkedList<Class<?>> stack, Class<?> clazz) {
+    protected boolean isRecursion(LinkedList<Class<?>> stack, Class<?> clazz) {
         if (stack != null && clazz != null) {
             int count = 0;
             for (Class<?> c : stack) {
@@ -158,7 +158,7 @@ public class ParameterAnalyser {
      * @param field Filed object
      * @return Property naming strategy
      */
-    private PropertyNamingStrategy getPropertyNamingStrategy(Field field) {
+    protected PropertyNamingStrategy getPropertyNamingStrategy(Field field) {
         Objects.requireNonNull(field, "field not specified");
 
         JsonNaming naming = field.getAnnotation(JsonNaming.class);
@@ -429,7 +429,7 @@ public class ParameterAnalyser {
      * @param consumer Field consumer
      * @return Parameter list
      */
-    private List<Parameter> class2parameters(Class<?> clazz, Function<Field, Parameter> consumer) {
+    protected List<Parameter> class2parameters(Class<?> clazz, Function<Field, Parameter> consumer) {
         Objects.requireNonNull(clazz, "clazz not specified");
         Objects.requireNonNull(consumer, "consumer not specified");
         Class<?> original = clazz;
@@ -460,8 +460,8 @@ public class ParameterAnalyser {
      * @param stack     Class stack
      * @return Parameter object
      */
-    private Parameter field2parameter(Object instance, Field field,
-                                      Map<TypeVariable<?>, Type> variables, LinkedList<Class<?>> stack) {
+    protected Parameter field2parameter(Object instance, Field field,
+                                        Map<TypeVariable<?>, Type> variables, LinkedList<Class<?>> stack) {
         Objects.requireNonNull(field, "field not specified");
         Type type = field.getGenericType();
         if (type instanceof TypeVariable && variables != null && variables.containsKey(type)) {
@@ -479,7 +479,7 @@ public class ParameterAnalyser {
                 .multiple(multiple).example(this.getExample(field)).deprecated(this.isDeprecated(field))
                 .defaultValue(this.getDefaultValue(instance, field)).description(this.getDescription(field))
                 .options(this.getOptions(target)).build();
-        if (!ClassHelper.isMetaClass(target) && !isRecursion(stack, target)) {
+        if (!ClassHelper.isMetaClass(target) && !this.isRecursion(stack, target)) {
             stack.addLast(target);
             Object targetInstance = multiple ? null : ClassHelper.getInstance(target);
             Map<TypeVariable<?>, Type> finalVariables = ClassHelper.getVariableParameterizedMappings(type);
