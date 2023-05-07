@@ -296,9 +296,17 @@ public final class DocumentHelper {
             }
         }
 
+        // Empty parameter
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        if (parameterTypes.length == 0) {
+            return "{String} Content-Type = application/json";
+        }
+
         // File upload
-        for (Class<?> type : method.getParameterTypes()) {
-            if (!ClassHelper.isMetaClass(type)) {
+        for (Class<?> type : parameterTypes) {
+            if (MultipartFile.class.isAssignableFrom(type)) {
+                return "{String} Content-Type = multipart/form-data";
+            } else if (!ClassHelper.isMetaClass(type)) {
                 for (Field field : type.getDeclaredFields()) {
                     if (!field.isSynthetic() && MultipartFile.class.isAssignableFrom(field.getType())) {
                         return "{String} Content-Type = multipart/form-data";

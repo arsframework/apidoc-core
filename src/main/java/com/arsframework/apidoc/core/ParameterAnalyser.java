@@ -295,7 +295,8 @@ public class ParameterAnalyser {
         return element != null && (element.isAnnotationPresent(NotNull.class)
                 || element.isAnnotationPresent(NotBlank.class) || element.isAnnotationPresent(NotEmpty.class)
                 || (element.isAnnotationPresent(Size.class) && element.getAnnotation(Size.class).min() > 0)
-                || (element.isAnnotationPresent(PathVariable.class) && element.getAnnotation(PathVariable.class).required()));
+                || (element.isAnnotationPresent(PathVariable.class) && element.getAnnotation(PathVariable.class).required())
+                || (element.isAnnotationPresent(RequestParam.class) && element.getAnnotation(RequestParam.class).required()));
     }
 
     /**
