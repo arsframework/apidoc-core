@@ -1,11 +1,15 @@
 package com.arsframework.apidoc.core;
 
 import java.lang.reflect.Method;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.MethodDoc;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * Method analyser
@@ -136,7 +140,9 @@ public class MethodAnalyser {
      * @return Api request methods
      */
     protected List<String> getMethods() {
-        return DocumentHelper.getApiMethods(this.method);
+        Set<RequestMethod> methods = DocumentHelper.getApiMethods(this.method);
+        return methods.stream().sorted(Comparator.comparing(Enum::ordinal))
+                .map(method -> method.name().toLowerCase()).collect(Collectors.toList());
     }
 
     /**

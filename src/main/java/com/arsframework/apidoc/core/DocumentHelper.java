@@ -10,11 +10,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.Doc;
@@ -238,10 +239,11 @@ public final class DocumentHelper {
      * @param method Method object
      * @return Request method list
      */
-    public static List<String> getApiMethods(Method method) {
+    public static Set<RequestMethod> getApiMethods(Method method) {
         Objects.requireNonNull(method, "method not specified");
         Annotation annotation;
-        List<RequestMethod> methods = new LinkedList<>();
+        RequestMethod[] defaults = RequestMethod.values();
+        Set<RequestMethod> methods = new HashSet<>(defaults.length);
         if ((annotation = method.getAnnotation(RequestMapping.class)) != null
                 && getActiveMapping(((RequestMapping) annotation).value(),
                 ((RequestMapping) annotation).path()) != null) {
@@ -273,9 +275,9 @@ public final class DocumentHelper {
             methods.add(RequestMethod.PATCH);
         }
         if (methods.isEmpty()) {
-            methods.addAll(Arrays.asList(RequestMethod.values()));
+            methods.addAll(Arrays.asList(defaults));
         }
-        return methods.stream().distinct().map(m -> m.name().toLowerCase()).collect(Collectors.toList());
+        return methods;
     }
 
     /**
@@ -296,13 +298,8 @@ public final class DocumentHelper {
             }
         }
 
-        // Empty parameter
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        if (parameterTypes.length == 0) {
-            return "{String} Content-Type = application/json";
-        }
-
         // File upload
+        Class<?>[] parameterTypes = method.getParameterTypes();
         for (Class<?> type : parameterTypes) {
             if (MultipartFile.class.isAssignableFrom(type)) {
                 return "{String} Content-Type = multipart/form-data";
@@ -315,7 +312,12 @@ public final class DocumentHelper {
             }
         }
 
-        // Form
+        // Empty parameter
+        if (parameterTypes.length == 0 && !getApiMethods(method).contains(RequestMethod.GET)) {
+            return "{String} Content-Type = application/json";
+        }
+
+        // Default
         return "{String} Content-Type = application/x-www-form-urlencoded";
     }
 
