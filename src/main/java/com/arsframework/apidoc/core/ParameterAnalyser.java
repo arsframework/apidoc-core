@@ -484,7 +484,7 @@ public class ParameterAnalyser {
             target = ClassHelper.type2class(type = ClassHelper.getCollectionActualType(type, variables));
         }
         boolean multiple = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
-        Parameter parameter = Parameter.builder().input(input).type(this.getType(target)).original(target)
+        Parameter parameter = Parameter.builder().field(field).input(input).type(this.getType(target)).original(target)
                 .name(this.getName(field)).size(this.getSize(field)).format(this.getFormat(field))
                 .required(this.isRequired(field)).multiple(multiple).example(this.getExample(field))
                 .deprecated(this.isDeprecated(field)).defaultValue(this.getDefaultValue(instance, field))

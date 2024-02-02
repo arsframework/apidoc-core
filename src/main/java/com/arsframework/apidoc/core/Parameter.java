@@ -1,5 +1,6 @@
 package com.arsframework.apidoc.core;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -17,6 +18,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Parameter {
+    /**
+     * Parameter field
+     */
+    private Field field;
+
     /**
      * Is input parameter
      */
