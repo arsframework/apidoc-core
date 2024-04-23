@@ -95,7 +95,7 @@ public class ParameterAnalyser {
      */
     protected boolean isActiveParameter(Field field) {
         return field != null && !field.isSynthetic() && !Modifier.isStatic(field.getModifiers())
-                && !Modifier.isFinal(field.getModifiers()) && !field.isAnnotationPresent(JsonIgnore.class);
+                && !field.isAnnotationPresent(JsonIgnore.class);
     }
 
     /**
