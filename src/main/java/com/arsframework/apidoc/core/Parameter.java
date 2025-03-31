@@ -49,6 +49,11 @@ public class Parameter {
     private Size size;
 
     /**
+     * Parameter entry
+     */
+    private String entry;
+
+    /**
      * Parameter format
      */
     private String format;

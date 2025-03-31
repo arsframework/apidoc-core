@@ -28,24 +28,24 @@ public class Api {
     private String name;
 
     /**
-     * Api group
+     * Api tag
      */
-    private String group;
+    private String tag;
 
     /**
-     * Api url
+     * Api uri
      */
-    private String url;
+    private String uri;
+
+    /**
+     * Api request mode
+     */
+    private String mode;
 
     /**
      * Api date
      */
     private String date;
-
-    /**
-     * Api request header
-     */
-    private String header;
 
     /**
      * Api version

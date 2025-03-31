@@ -52,12 +52,12 @@ public class MethodAnalyser {
     }
 
     /**
-     * Get api url
+     * Get api uri
      *
-     * @return Api url
+     * @return Api uri
      */
-    protected String getUrl() {
-        return DocumentHelper.getApiUrl(this.method);
+    protected String getUri() {
+        return DocumentHelper.getApiUri(this.method);
     }
 
     /**
@@ -71,22 +71,13 @@ public class MethodAnalyser {
     }
 
     /**
-     * Get api group
+     * Get api tag
      *
-     * @return Api group
+     * @return Api tag
      */
-    protected String getGroup() {
+    protected String getTag() {
         String group = DocumentHelper.getCommentOutline(this.getClassDocument());
         return group == null ? this.method.getDeclaringClass().getSimpleName() : group;
-    }
-
-    /**
-     * Get api header
-     *
-     * @return Api header
-     */
-    protected String getHeader() {
-        return DocumentHelper.getApiHeader(this.method);
     }
 
     /**
@@ -96,6 +87,15 @@ public class MethodAnalyser {
      */
     protected boolean isDeprecated() {
         return DocumentHelper.isApiDeprecated(this.method);
+    }
+
+    /**
+     * Get api request mode
+     *
+     * @return Request mode
+     */
+    protected String getApiMode() {
+        return DocumentHelper.getApiMode(this.method);
     }
 
     /**
@@ -162,9 +162,9 @@ public class MethodAnalyser {
     public Api parse() {
         ParameterAnalyser parameterAnalyser = this.getParameterAnalyser();
         Objects.requireNonNull(parameterAnalyser, "ParameterAnalyser must not be null");
-        return Api.builder().key(this.getKey()).url(this.getUrl()).name(this.getName()).group(this.getGroup())
-                .header(this.getHeader()).description(this.getDescription()).deprecated(this.isDeprecated())
-                .methods(this.getMethods()).date(this.getDate()).authors(this.getAuthors()).version(this.getVersion())
+        return Api.builder().key(this.getKey()).name(this.getName()).tag(this.getTag()).uri(this.getUri())
+                .mode(this.getApiMode()).date(this.getDate()).version(this.getVersion()).methods(this.getMethods())
+                .description(this.getDescription()).deprecated(this.isDeprecated()).authors(this.getAuthors())
                 .parameters(parameterAnalyser.getParameters()).returned(parameterAnalyser.getReturned()).build();
     }
 

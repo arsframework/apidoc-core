@@ -6,7 +6,7 @@
 
     <groupId>com.arsframework</groupId>
     <artifactId>apidoc-core</artifactId>
-    <version>1.3.13</version>
+    <version>1.4.0</version>
 
     <name>apidoc-core</name>
     <description>Apidoc core</description>

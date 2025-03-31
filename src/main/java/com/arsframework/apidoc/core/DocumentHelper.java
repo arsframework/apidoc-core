@@ -214,12 +214,12 @@ public final class DocumentHelper {
     }
 
     /**
-     * Get api url of method
+     * Get api uri of method
      *
      * @param method Method object
-     * @return Api url
+     * @return Api uri
      */
-    public static String getApiUrl(Method method) {
+    public static String getApiUri(Method method) {
         Objects.requireNonNull(method, "method not specified");
         StringBuilder api = new StringBuilder();
         String prefix = getClassMapping(method.getDeclaringClass());
@@ -231,6 +231,47 @@ public final class DocumentHelper {
             api.append("/").append(suffix);
         }
         return api.toString().replace("//", "/");
+    }
+
+    /**
+     * Get api request mode
+     *
+     * @param method Method object
+     * @return Request mode
+     */
+    public static String getApiMode(Method method) {
+        Objects.requireNonNull(method, "method not specified");
+
+        // @RequestBody
+        for (Annotation[] annotations : method.getParameterAnnotations()) {
+            for (Annotation annotation : annotations) {
+                if (annotation instanceof RequestBody) {
+                    return "application/json";
+                }
+            }
+        }
+
+        // File upload
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        for (Class<?> type : parameterTypes) {
+            if (MultipartFile.class.isAssignableFrom(type)) {
+                return "multipart/form-data";
+            } else if (!ClassHelper.isMetaClass(type)) {
+                for (Field field : type.getDeclaredFields()) {
+                    if (!field.isSynthetic() && MultipartFile.class.isAssignableFrom(field.getType())) {
+                        return "multipart/form-data";
+                    }
+                }
+            }
+        }
+
+        // Empty parameter
+        if (parameterTypes.length == 0 && !getApiMethods(method).contains(RequestMethod.GET)) {
+            return "application/json";
+        }
+
+        // Default
+        return "application/x-www-form-urlencoded";
     }
 
     /**
@@ -278,47 +319,6 @@ public final class DocumentHelper {
             methods.addAll(Arrays.asList(defaults));
         }
         return methods;
-    }
-
-    /**
-     * Get api request header
-     *
-     * @param method Method object
-     * @return Request header
-     */
-    public static String getApiHeader(Method method) {
-        Objects.requireNonNull(method, "method not specified");
-
-        // @RequestBody
-        for (Annotation[] annotations : method.getParameterAnnotations()) {
-            for (Annotation annotation : annotations) {
-                if (annotation instanceof RequestBody) {
-                    return "{String} Content-Type = application/json";
-                }
-            }
-        }
-
-        // File upload
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        for (Class<?> type : parameterTypes) {
-            if (MultipartFile.class.isAssignableFrom(type)) {
-                return "{String} Content-Type = multipart/form-data";
-            } else if (!ClassHelper.isMetaClass(type)) {
-                for (Field field : type.getDeclaredFields()) {
-                    if (!field.isSynthetic() && MultipartFile.class.isAssignableFrom(field.getType())) {
-                        return "{String} Content-Type = multipart/form-data";
-                    }
-                }
-            }
-        }
-
-        // Empty parameter
-        if (parameterTypes.length == 0 && !getApiMethods(method).contains(RequestMethod.GET)) {
-            return "{String} Content-Type = application/json";
-        }
-
-        // Default
-        return "{String} Content-Type = application/x-www-form-urlencoded";
     }
 
     /**

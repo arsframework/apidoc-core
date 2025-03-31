@@ -46,7 +46,9 @@ import com.sun.javadoc.FieldDoc;
 import com.sun.javadoc.MethodDoc;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.bind.annotation.ValueConstants;
@@ -218,10 +220,29 @@ public class ParameterAnalyser {
      */
     protected String getName(java.lang.reflect.Parameter parameter) {
         Objects.requireNonNull(parameter, "parameter not specified");
-        RequestParam annotation = parameter.getAnnotation(RequestParam.class);
-        String name = annotation == null ? null :
-                (name = annotation.value().trim()).isEmpty() ? annotation.name().trim() : name;
-        return name == null || name.isEmpty() ? parameter.getName() : name;
+
+        String name;
+        PathVariable path = parameter.getAnnotation(PathVariable.class);
+        if (path != null && (!(name = path.value().trim()).isEmpty() || !(name = path.name().trim()).isEmpty())) {
+            return name;
+        }
+
+        RequestParam query = parameter.getAnnotation(RequestParam.class);
+        if (query != null && (!(name = query.value().trim()).isEmpty() || !(name = query.name().trim()).isEmpty())) {
+            return name;
+        }
+
+        RequestHeader header = parameter.getAnnotation(RequestHeader.class);
+        if (header != null && (!(name = header.value().trim()).isEmpty() || !(name = header.name().trim()).isEmpty())) {
+            return name;
+        }
+
+        CookieValue cookie = parameter.getAnnotation(CookieValue.class);
+        if (cookie != null && (!(name = cookie.value().trim()).isEmpty() || !(name = cookie.name().trim()).isEmpty())) {
+            return name;
+        }
+
+        return parameter.getName();
     }
 
     /**
@@ -261,6 +282,36 @@ public class ParameterAnalyser {
     }
 
     /**
+     * Get parameter entry
+     *
+     * @param parameter Parameter object
+     * @return Parameter entry
+     */
+    protected String getEntry(java.lang.reflect.Parameter parameter) {
+        PathVariable path = parameter.getAnnotation(PathVariable.class);
+        if (path != null) {
+            return "path";
+        }
+
+        RequestParam query = parameter.getAnnotation(RequestParam.class);
+        if (query != null) {
+            return "query";
+        }
+
+        RequestHeader header = parameter.getAnnotation(RequestHeader.class);
+        if (header != null) {
+            return "header";
+        }
+
+        CookieValue cookie = parameter.getAnnotation(CookieValue.class);
+        if (cookie != null) {
+            return "cookie";
+        }
+
+        return null;
+    }
+
+    /**
      * Get parameter format
      *
      * @param element Annotated element
@@ -296,7 +347,9 @@ public class ParameterAnalyser {
                 || element.isAnnotationPresent(NotBlank.class) || element.isAnnotationPresent(NotEmpty.class)
                 || (element.isAnnotationPresent(Size.class) && element.getAnnotation(Size.class).min() > 0)
                 || (element.isAnnotationPresent(PathVariable.class) && element.getAnnotation(PathVariable.class).required())
-                || (element.isAnnotationPresent(RequestParam.class) && element.getAnnotation(RequestParam.class).required()));
+                || (element.isAnnotationPresent(RequestParam.class) && element.getAnnotation(RequestParam.class).required())
+                || (element.isAnnotationPresent(RequestHeader.class) && element.getAnnotation(RequestHeader.class).required())
+                || (element.isAnnotationPresent(CookieValue.class) && element.getAnnotation(CookieValue.class).required()));
     }
 
     /**
@@ -523,10 +576,10 @@ public class ParameterAnalyser {
 
             boolean multiple = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
             Parameter parent = Parameter.builder().input(true).type(this.getType(target)).original(target)
-                    .name(this.getName(parameter)).size(this.getSize(parameter)).format(this.getFormat(parameter))
-                    .required(this.isRequired(parameter)).multiple(multiple).deprecated(this.isDeprecated(parameter))
-                    .defaultValue(this.getDefaultValue(parameter)).description(this.getDescription(parameter))
-                    .options(this.getOptions(target)).build();
+                    .name(this.getName(parameter)).size(this.getSize(parameter)).entry(this.getEntry(parameter))
+                    .format(this.getFormat(parameter)).required(this.isRequired(parameter)).multiple(multiple)
+                    .deprecated(this.isDeprecated(parameter)).defaultValue(this.getDefaultValue(parameter))
+                    .description(this.getDescription(parameter)).options(this.getOptions(target)).build();
             if (ClassHelper.isMetaClass(target)) {
                 this.afterInitializeParameter(parent);
                 parameters.add(parent);
